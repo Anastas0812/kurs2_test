@@ -18,13 +18,11 @@ class VK:
        self.version = version
        self.params = {'access_token': self.token, 'v': self.version}
 
-   def my_id(self):
-       url = 'https://api.vk.com/method/users.get'
-       params = {'user_ids': self.id,
-                 'fields': 'screen_name'}
+   def utils_resolveScreenName(self):
+       url = 'https://api.vk.com/method/utils.resolveScreenName'
+       params = {'screen_name': self.id}
        response = requests.get(url, params={**self.params, **params})
-       my_id = response.json()['response'][0]['screen_name'] or response.json()['response'][0]['id']
-       return my_id
+       return response.json()['response']['object_id']
 
    def users_info(self):
        url = 'https://api.vk.com/method/users.get'
@@ -34,17 +32,30 @@ class VK:
        return response.json()
 
    def vk_download(self, offset=0, count=5):
-       response = requests.get('https://api.vk.com/method/photos.get', params={
-           'owner_id': self.id,
-           'access_token': self.token,
-           'offset': offset,
-           'count': count,
-           'album_id': 'profile',
-           'extended': 1,
-           'photo_sizes': 1,
-           'v': self.version
-       })
+       if my_id.isdigit() == True:
+           response = requests.get('https://api.vk.com/method/photos.get', params={
+               'owner_id': self.id,
+               'access_token': self.token,
+               'offset': offset,
+               'count': count,
+               'album_id': 'profile',
+               'extended': 1,
+               'photo_sizes': 1,
+               'v': self.version
+               })
+       else:
+           response = requests.get('https://api.vk.com/method/photos.get', params={
+               'owner_id': f'{vk.utils_resolveScreenName()}',
+               'access_token': self.token,
+               'offset': offset,
+               'count': count,
+               'album_id': 'profile',
+               'extended': 1,
+               'photo_sizes': 1,
+               'v': self.version
+           })
        return response.json()
+
 
    def do_data(self):
        data = vk.vk_download()
@@ -145,6 +156,8 @@ ya = Yandex(token_ya)
 
 
 if __name__ == '__main__':
+    # print(vk.users_info())
+    # print(vk.utils_resolveScreenName())
     print(ya.do_folder())
     print(ya.download_photos())
     with open('save_file.json') as f:
