@@ -1,4 +1,4 @@
-#восстанови папку рекварементс
+
 import requests
 import time
 import json
@@ -17,6 +17,14 @@ class VK:
        self.id = my_id
        self.version = version
        self.params = {'access_token': self.token, 'v': self.version}
+
+   def my_id(self):
+       url = 'https://api.vk.com/method/users.get'
+       params = {'user_ids': self.id,
+                 'fields': 'screen_name'}
+       response = requests.get(url, params={**self.params, **params})
+       my_id = response.json()['response'][0]['screen_name'] or response.json()['response'][0]['id']
+       return my_id
 
    def users_info(self):
        url = 'https://api.vk.com/method/users.get'
@@ -38,7 +46,7 @@ class VK:
        })
        return response.json()
 
-   def do_data(self):   #отлично
+   def do_data(self):
        data = vk.vk_download()
        return data
 
@@ -80,7 +88,6 @@ class VK:
        return list_photo_name
 
 
-
 def start():
     try:
         my_id = input('Введите ID пользователя ВКонтакте: ')
@@ -95,12 +102,16 @@ def start():
 
     except IndexError:
         print('Неверный ID, попробуйте снова')
-    my_id = id1
+    except UnboundLocalError:
+        print('Неверный ID, попробуйте снова')
+        my_id = id1
     return my_id
 
 my_id = start()
-token_ya = input('Введите токен с Полигона Яндекс.Диска: ')
 vk = VK(access_token, my_id)
+
+token_ya = input('Введите токен с Полигона Яндекс.Диска: ')
+
 
 
 class Yandex:
@@ -115,29 +126,27 @@ class Yandex:
                                headers=headers)
        return 'Папка на Яндекс Диске создана :)'
 
+   def download_photos(self):
+       a = vk.get_file_name()
+       b = vk.get_photo_url()
 
-params = {'path': f'Kursovaya_rabota/'}
-headers = {'Authorization': 'OAuth ' + token_ya}
-response = requests.get('https://cloud-api.yandex.net/v1/disk/resources/upload',
+       for file_name, url_photo in zip(a, b):
+           params = {'path': f'Kursovaya_rabota/{file_name}', 'url': f'{url_photo}'}
+           headers = {'Authorization': 'OAuth ' + self.token}
+           response = requests.post('https://cloud-api.yandex.net/v1/disk/resources/upload',
                                params=params,
                                headers=headers)
-url_for_upload = response.json()['href']
-
-# with open(vk.get_file_name(), 'rb') as f:
-#     requests.put(url_for_upload, files={'file': f})
+       return "Мы уже загрузили твои фото в папку, проверяй"
 
 
 ya = Yandex(token_ya)
-token_ya = config['Yandex']['token_ya']
+
 
 
 
 if __name__ == '__main__':
     print(ya.do_folder())
-    # with open('save_file.json') as f:
-    #     res = f.read()
-    # print(vk.users_info())
-    # print(res)
-    # print(ya.do_folder())
-    # print(ya.download_to_ya_disk())
-    # print(ya.test_())
+    print(ya.download_photos())
+    with open('save_file.json') as f:
+        res = f.read()
+    print(res)
